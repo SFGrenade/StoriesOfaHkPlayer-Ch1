@@ -37,7 +37,7 @@ public class StoriesOfaHkPlayer_Ch1 : Mod
     {
         LangStrings = new LanguageStrings(Assembly.GetExecutingAssembly(), "StoriesOfaHkPlayer_Ch1.Resources.Language.json", Encoding.UTF8);
 
-        MenuStyleHelper.AddMenuStyleHook += AddMenuStyle;
+        InitCallbacks();
     }
 
     public override void Initialize()
@@ -45,17 +45,21 @@ public class StoriesOfaHkPlayer_Ch1 : Mod
         Log("Initializing");
         Instance = this;
 
-        ModHooks.LanguageGetHook += OnLanguageGetHook;
-
         var tmpStyle = MenuStyles.Instance.styles.First(x => x.styleObject.name.Contains("StoriesOfaHkPlayer_Ch1 Style"));
         MenuStyles.Instance.SetStyle(MenuStyles.Instance.styles.ToList().IndexOf(tmpStyle), false);
 
         GameObject.Find("BlurPlane (1)").SetActive(false);
         GameObject.Find("LogoTitle").SetActive(false);
         UIManager.instance.UICanvas.gameObject.SetActive(false);
-            
 
         Log("Initialized");
+    }
+
+    private void InitCallbacks()
+    {
+        MenuStyleHelper.AddMenuStyleHook += AddMenuStyle;
+
+        ModHooks.LanguageGetHook += OnLanguageGetHook;
     }
 
     private (string languageString, GameObject styleGo, int titleIndex, string unlockKey, string[] achievementKeys, MenuStyles.MenuStyle.CameraCurves cameraCurves, AudioMixerSnapshot musicSnapshot) AddMenuStyle(MenuStyles self)
