@@ -45,6 +45,11 @@ public class StoriesOfaHkPlayer_Ch1 : Mod
         Log("Initializing");
         Instance = this;
 
+        bool ch1Detected = Modding.ModHooks.GetMod("Stories of a HK player - Chapter 1") is Mod;
+        bool ch2Detected = Modding.ModHooks.GetMod("Stories of a HK player - Chapter 2") is Mod;
+        Log($"Detected Chapter 1: {ch1Detected}");
+        Log($"Detected Chapter 2: {ch2Detected}");
+
         var tmpStyle = MenuStyles.Instance.styles.First(x => x.styleObject.name.Contains("StoriesOfaHkPlayer_Ch1 Style"));
         MenuStyles.Instance.SetStyle(MenuStyles.Instance.styles.ToList().IndexOf(tmpStyle), false);
 
@@ -62,6 +67,7 @@ public class StoriesOfaHkPlayer_Ch1 : Mod
         ModHooks.LanguageGetHook += OnLanguageGetHook;
     }
 
+    private VideoPlayer vp = null;
     private (string languageString, GameObject styleGo, int titleIndex, string unlockKey, string[] achievementKeys, MenuStyles.MenuStyle.CameraCurves cameraCurves, AudioMixerSnapshot musicSnapshot) AddMenuStyle(MenuStyles self)
     {
         GameObject menuStyleGo = new GameObject("StoriesOfaHkPlayer_Ch1 Style");
@@ -111,7 +117,7 @@ public class StoriesOfaHkPlayer_Ch1 : Mod
             new Keyframe(45.86174f, 1),
             new Keyframe(55.33846f, 0)
         }));
-        var vp = menuStyleGo.AddComponent<VideoPlayer>();
+        vp = menuStyleGo.AddComponent<VideoPlayer>();
         //vp.playOnAwake = false;
         vp.audioOutputMode = VideoAudioOutputMode.AudioSource;
         vp.renderMode = VideoRenderMode.CameraFarPlane;
@@ -120,11 +126,7 @@ public class StoriesOfaHkPlayer_Ch1 : Mod
         vp.source = VideoSource.VideoClip;
         vp.clip = _abTitleScreen.LoadAsset<VideoClip>("StoriesOfaHkPlayer_Ch1");
         vp.SetTargetAudioSource(0, aSource);
-        vp.loopPointReached += (videoPlayer) =>
-        {
-            UIManager.instance.QuitGame();
-            //Application.Quit();
-        };
+        vp.loopPointReached += EndCallback;
         UObject.DontDestroyOnLoad(vp.clip);
 
         var cameraCurves = new MenuStyles.MenuStyle.CameraCurves();
@@ -142,6 +144,19 @@ public class StoriesOfaHkPlayer_Ch1 : Mod
         menuStyleGo.SetActive(true);
         //PrintDebug(menuStyleGo);
         return ("UI_MENU_STYLE_STORIESOFAHKPLAYER_CH1", menuStyleGo, -1, "", null, cameraCurves, Resources.FindObjectsOfTypeAll<AudioMixer>().First(x => x.name == "Music").FindSnapshot("Silent"));
+    }
+
+    private static void EndCallback(VideoPlayer _)
+    {
+        UIManager.instance.QuitGame();
+        //Application.Quit();
+    }
+
+    public void SetEndCallback(VideoPlayer.EventHandler callback)
+    {
+        if (!vp) return;
+        vp.loopPointReached -= EndCallback;
+        vp.loopPointReached += callback;
     }
 
     private string OnLanguageGetHook(string key, string sheet, string orig)
