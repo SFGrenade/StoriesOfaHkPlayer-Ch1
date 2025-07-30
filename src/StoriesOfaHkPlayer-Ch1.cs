@@ -45,10 +45,10 @@ public class StoriesOfaHkPlayer_Ch1 : Mod
         Log("Initializing");
         Instance = this;
 
-        bool ch1Detected = Modding.ModHooks.GetMod("Stories of a HK player - Chapter 1") is Mod;
-        bool ch2Detected = Modding.ModHooks.GetMod("Stories of a HK player - Chapter 2") is Mod;
-        Log($"Detected Chapter 1: {ch1Detected}");
-        Log($"Detected Chapter 2: {ch2Detected}");
+        bool anyDepInstalled = CheckForAnyChapterDep(1);
+        Log($"Any prev chapter installed: {anyDepInstalled}");
+        bool depsCorrect = CheckChapterDeps(1);
+        Log($"Correct prev chapters: {depsCorrect}");
 
         var tmpStyle = MenuStyles.Instance.styles.First(x => x.styleObject.name.Contains("StoriesOfaHkPlayer_Ch1 Style"));
         MenuStyles.Instance.SetStyle(MenuStyles.Instance.styles.ToList().IndexOf(tmpStyle), false);
@@ -144,6 +144,33 @@ public class StoriesOfaHkPlayer_Ch1 : Mod
         menuStyleGo.SetActive(true);
         //PrintDebug(menuStyleGo);
         return ("UI_MENU_STYLE_STORIESOFAHKPLAYER_CH1", menuStyleGo, -1, "", null, cameraCurves, Resources.FindObjectsOfTypeAll<AudioMixer>().First(x => x.name == "Music").FindSnapshot("Silent"));
+    }
+
+    private bool CheckForAnyChapterDep(int num)
+    {
+        if (num <= 1) return false;
+        for (int i = 1; i < num; i++)
+        {
+            bool chapterInstalled = Modding.ModHooks.GetMod($"Stories of a HK player - Chapter {i}") is Mod;
+            if (chapterInstalled) return true;
+        }
+        return false;
+    }
+
+    private bool CheckChapterDeps(int num)
+    {
+        if (num <= 1) return true;
+        for (int i = 1; i < num; i++)
+        {
+            bool chapterInstalled = Modding.ModHooks.GetMod($"Stories of a HK player - Chapter {i}") is Mod;
+            if (!chapterInstalled) continue;
+            for (int j = i + 1; j < num; j++)
+            {
+                bool nextChapterInstalled = Modding.ModHooks.GetMod($"Stories of a HK player - Chapter {j}") is Mod;
+                if (!nextChapterInstalled) return false;
+            }
+        }
+        return true;
     }
 
     private static void EndCallback(VideoPlayer _)
