@@ -1,6 +1,7 @@
 ﻿using Modding;
 using SFCore;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -45,6 +46,22 @@ public class StoriesOfaHkPlayer_Ch1 : Mod
         Log("Initializing");
         Instance = this;
 
+        GameManager.instance.StartCoroutine(DoMenuShenenigans());
+
+        Log("Initialized");
+    }
+
+    private void InitCallbacks()
+    {
+        MenuStyleHelper.AddMenuStyleHook += AddMenuStyle;
+
+        ModHooks.LanguageGetHook += OnLanguageGetHook;
+    }
+
+    private IEnumerator DoMenuShenenigans()
+    {
+        yield return new WaitWhile(() => MenuStyles.Instance == null);
+
         bool anyDepInstalled = CheckForAnyChapterDep(1);
         Log($"Any prev chapter installed: {anyDepInstalled}");
         bool depsCorrect = CheckChapterDeps(1);
@@ -56,15 +73,7 @@ public class StoriesOfaHkPlayer_Ch1 : Mod
         GameObject.Find("BlurPlane (1)").SetActive(false);
         GameObject.Find("LogoTitle").SetActive(false);
         UIManager.instance.UICanvas.gameObject.SetActive(false);
-
-        Log("Initialized");
-    }
-
-    private void InitCallbacks()
-    {
-        MenuStyleHelper.AddMenuStyleHook += AddMenuStyle;
-
-        ModHooks.LanguageGetHook += OnLanguageGetHook;
+        yield break;
     }
 
     private VideoPlayer vp = null;
@@ -88,6 +97,10 @@ public class StoriesOfaHkPlayer_Ch1 : Mod
                     _abTitleScreen = AssetBundle.LoadFromStream(s);
                 }
             }
+        }
+        if (_abTitleScreen == null)
+        {
+            LogError($"Error loading AssetBundle!");
         }
 
         #endregion
